@@ -10,7 +10,7 @@ from ipaddress import IPv4Network, IPv4Address
 from shutil import copyfile
 import re
 
-SEEDEMU_CLIENT_IMAGE='karlolson1/bgpchain:v1'
+SEEDEMU_CLIENT_IMAGE='handsonsecurity/seedemu-map'
 ETH_SEEDEMU_CLIENT_IMAGE='rawisader/seedemu-eth-client'
 
 DockerCompilerFileTemplates: Dict[str, str] = {}
@@ -20,10 +20,20 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN echo 'exec zsh' > /root/.bashrc
 """
 
+# DockerCompilerFileTemplates['start_script'] = """\
+# #!/bin/bash
+# {startCommands}
+# {specialCommands}
+# echo "ready! run 'docker exec -it $HOSTNAME /bin/zsh' to attach to this node" >&2
+# for f in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "$f"; done
+# tail -f /dev/null
+# """
+
+#BA
 DockerCompilerFileTemplates['start_script'] = """\
 #!/bin/bash
 {startCommands}
-{specialCommands}
+{rtrServer}
 echo "ready! run 'docker exec -it $HOSTNAME /bin/zsh' to attach to this node" >&2
 for f in /proc/sys/net/ipv4/conf/*/rp_filter; do echo 0 > "$f"; done
 tail -f /dev/null
@@ -497,7 +507,7 @@ class DockerImage(object):
 
 DefaultImages: List[DockerImage] = []
 
-DefaultImages.append(DockerImage('karlolson1/bgpchain:v1', []))
+DefaultImages.append(DockerImage('ubuntu:20.04', []))
 
 network_devices=[]
 
@@ -1041,18 +1051,22 @@ class Docker(Compiler):
 	#KO
 	#Removed apt updates and included in base build. added pass.
         if not node.hasAttribute('__soft_install_tiers') and len(soft) > 0:
-            #dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(soft)))
-            pass
+            dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(soft)))
+
             
         if node.hasAttribute('__soft_install_tiers'):
             softLists: List[List[str]] = node.getAttribute('__soft_install_tiers')
             for softList in softLists:
-                #dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(softList)))
-                pass
-	
-        #dockerfile += 'RUN curl -L https://grml.org/zsh/zshrc > /root/.zshrc\n'
-        dockerfile = 'FROM {}\n'.format(md5(image.getName().encode('utf-8')).hexdigest()) + dockerfile
-        self._used_images.add(image.getName())
+                dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(softList)))
+
+
+        dockerfile += 'RUN curl -L https://grml.org/zsh/zshrc > /root/.zshrc\n'
+        rpki_image = "bashayer123/rpki_image_one_tal:latest"
+        if 'host_rpki' in real_nodename:
+            dockerfile = 'FROM {}\n'.format(rpki_image)
+        else:
+            dockerfile = 'FROM {}\n'.format(md5(image.getName().encode('utf-8')).hexdigest()) + dockerfile
+            self._used_images.add(image.getName())
 
         for cmd in node.getBuildCommands(): dockerfile += 'RUN {}\n'.format(cmd)
 
@@ -1077,49 +1091,70 @@ class Docker(Compiler):
         #         network_devices.append(node.getAsn())
         #     else:
         #         special_commands += '''python3 /bgp_smart_contracts/src/account_script.py '{}' '''.format([node.getAsn()])
-            
-        if node.getName() == "ix100":
-                dockerfile += self._addFile('/ganache.sh', DockerCompilerFileTemplates['ganache'])
-                start_commands += 'chmod +x /ganache.sh\n'
-                special_commands += '/ganache.sh\n'
-                
-                #Appends each topology node to the array to aid auto deployment (of devices in array)
-                network_devices.append(node.getAsn())
-                
-                #Adds the IX's to the BGP node list to deploy blockchain accounts and data (could simplify this).
-                if 101 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
-                    network_devices.append(101)
-                if 102 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
-                    network_devices.append(102) 
-                if 103 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
-                    network_devices.append(103) 
-                if 104 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
-                    network_devices.append(104) 
-                if 105 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
-                    network_devices.append(105)                     
-                net_asn=list(set(network_devices))
-                
-                #adds setup script on blockchain for every participating node
-                special_commands += '''python3 /bgp_smart_contracts/src/account_script.py '{}' '''.format(net_asn)
 
-        #change to this for random proxy deployment and remove 106:  #host_proxy or proxy in real_nodename
-        #if 'host_proxy' in real_nodename:
+    #     if node.getName() == "ix100":
+    #             dockerfile += self._addFile('/ganache.sh', DockerCompilerFileTemplates['ganache'])
+    #             start_commands += 'chmod +x /ganache.sh\n'
+    #             special_commands += '/ganache.sh\n'
+    #
+    #             #Appends each topology node to the array to aid auto deployment (of devices in array)
+    #             network_devices.append(node.getAsn())
+    #
+    #             #Adds the IX's to the BGP node list to deploy blockchain accounts and data (could simplify this).
+    #             if 101 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
+    #                 network_devices.append(101)
+    #             if 102 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
+    #                 network_devices.append(102)
+    #             if 103 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
+    #                 network_devices.append(103)
+    #             if 104 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
+    #                 network_devices.append(104)
+    #             if 105 not in network_devices and 3 in network_devices: # NOTE: this is specific to A20-nano-internet
+    #                 network_devices.append(105)
+    #             net_asn=list(set(network_devices))
+    #
+    #             #adds setup script on blockchain for every participating node
+    #             special_commands += '''python3 /bgp_smart_contracts/src/account_script.py '{}' '''.format(net_asn)
+    #
+    #     #change to this for random proxy deployment and remove 106:  #host_proxy or proxy in real_nodename
+    #     #if 'host_proxy' in real_nodename:
+    #
+	# #this applies EVERY router to participate in blockchain setup. Modify to change to only nodes deploying proxy.
+    #     #elif (("router" in node.getName()) or (re.match("r[0-9]", node.getName()))):
+    #     elif ("proxy" in node.getName()):
+    #             dockerfile += self._addFile('/proxy.sh', DockerCompilerFileTemplates['proxy'].format(node.getAsn(), node.getCrossConnects(), node.getAsn()))
+    #             dockerfile += self._addFile('/bgp_smart_contracts/src/wait_for_it.sh', DockerCompilerFileTemplates['wait_for_it'])
+    #             start_commands += 'chmod +x /proxy.sh\n'
+    #             start_commands += 'chmod +x /bgp_smart_contracts/src/wait_for_it.sh\n'
+    #             special_commands += '/proxy.sh\n'
+    #             network_devices.append(node.getAsn())
 
-	#this applies EVERY router to participate in blockchain setup. Modify to change to only nodes deploying proxy.
-        #elif (("router" in node.getName()) or (re.match("r[0-9]", node.getName()))):
-        elif ("proxy" in node.getName()):
-                dockerfile += self._addFile('/proxy.sh', DockerCompilerFileTemplates['proxy'].format(node.getAsn(), node.getCrossConnects(), node.getAsn()))
-                dockerfile += self._addFile('/bgp_smart_contracts/src/wait_for_it.sh', DockerCompilerFileTemplates['wait_for_it'])
-                start_commands += 'chmod +x /proxy.sh\n'
-                start_commands += 'chmod +x /bgp_smart_contracts/src/wait_for_it.sh\n'
-                special_commands += '/proxy.sh\n'
-                network_devices.append(node.getAsn())
+        if 'host_rpki' in real_nodename:
 
+            # dockerfile += 'RUN apt-get update && apt-get upgrade -y\n'
+            # dockerfile += 'RUN apt install rsync grsync -y\n'
+            # dockerfile += 'RUN apt install build-essential -y\n'
+            # dockerfile += 'RUN apt-get install manpages-dev\n'
+            # dockerfile += 'RUN curl --proto \'=https\' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y\n'
+            # dockerfile += 'RUN . $HOME/.cargo/env\n'
+            # dockerfile += 'ENV PATH="/root/.cargo/bin:${PATH}"\n'
+            # dockerfile += 'RUN cargo install --version 0.11.3 -f routinator\n'
+            # dockerfile += 'RUN routinator init --accept-arin-rpa\n'
+            # dockerfile += 'RUN routinator -v vrps -o ROAs.csv\n'
+            # dockerfile += 'RUN routinator -v vrps -o ROAs.csv --logfile /var/log/routinator.log\n' [returned a non-zero code: 1 when building]
 
-        dockerfile += self._addFile('/start.sh', DockerCompilerFileTemplates['start_script'].format(
-                startCommands = start_commands,
-                specialCommands=special_commands
-        ))
+            dockerfile += self._addFile('/start.sh', DockerCompilerFileTemplates['start_script'].format(
+                startCommands=start_commands,
+                rtrServer='routinator server --rtr {ip}:3323 --refresh=300 --detach &\n'.format(
+                    ip=node.getInterfaces()[0].getAddress())))
+        else:
+            dockerfile += self._addFile('/start.sh', DockerCompilerFileTemplates['start_script'].format(
+                startCommands=start_commands, rtrServer='echo'))
+
+        # dockerfile += self._addFile('/start.sh', DockerCompilerFileTemplates['start_script'].format(
+        #         startCommands = start_commands,
+        #         specialCommands=special_commands
+        # ))
         dockerfile += self._addFile('/seedemu_sniffer', DockerCompilerFileTemplates['seedemu_sniffer'])
         dockerfile += self._addFile('/seedemu_worker', DockerCompilerFileTemplates['seedemu_worker'])
 

