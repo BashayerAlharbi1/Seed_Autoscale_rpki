@@ -3,7 +3,7 @@ from seedemu.core import Binding, Filter, Emulator, Service, Router, AutonomousS
 from typing import List, Tuple, Dict
 
 def makeTransitAs(base: Base, asn: int, exchanges: List[int],
-    intra_ix_links: List[Tuple[int, int]], proxy: bool) -> AutonomousSystem:
+    intra_ix_links: List[Tuple[int, int]], rpki: bool) -> AutonomousSystem:
     """!
     @brief create a transit AS.
 
@@ -21,8 +21,8 @@ def makeTransitAs(base: Base, asn: int, exchanges: List[int],
 
     # Create a BGP router for each internet exchange (for peering purpose)
     for ix in exchanges:
-        if proxy is True:
-            routers[ix] = transit_as.createRouter('r{}_proxy'.format(ix))
+        if rpki is True:
+            routers[ix] = transit_as.createRouter('r{}_rpki'.format(ix))
             routers[ix].joinNetwork('ix{}'.format(ix))
         else:
             routers[ix] = transit_as.createRouter('r{}'.format(ix))
@@ -34,10 +34,10 @@ def makeTransitAs(base: Base, asn: int, exchanges: List[int],
     # over a single or multiple hops, it is OK.
     for (a, b) in intra_ix_links:
         name = 'net_{}_{}'.format(a, b)
-        if proxy is True:
+        if rpki is True:
             host_addr = '10.{}.0.74'.format(asn)
-            transit_as.createHost('host_proxy').joinNetwork(name, address=host_addr)
-            proxy = False
+            transit_as.createHost('host_rpki').joinNetwork(name, address=host_addr)
+            rpki = False
         transit_as.createNetwork(name)
         routers[a].joinNetwork(name)
         routers[b].joinNetwork(name)
