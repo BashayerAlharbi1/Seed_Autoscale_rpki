@@ -1155,7 +1155,6 @@ class Docker(Compiler):
         #         startCommands = start_commands,
         #         specialCommands=special_commands
         # ))
-	dockerfile += 'RUN apt install traceroute -y\n'
         dockerfile += self._addFile('/seedemu_sniffer', DockerCompilerFileTemplates['seedemu_sniffer'])
         dockerfile += self._addFile('/seedemu_worker', DockerCompilerFileTemplates['seedemu_worker'])
 
