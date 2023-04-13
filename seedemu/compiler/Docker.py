@@ -507,7 +507,7 @@ class DockerImage(object):
 
 DefaultImages: List[DockerImage] = []
 
-DefaultImages.append(DockerImage('ubuntu:20.04', []))
+DefaultImages.append(DockerImage('bashayer123/rpki_image:v1', []))
 
 network_devices=[]
 
@@ -1061,12 +1061,9 @@ class Docker(Compiler):
                 pass
 
         dockerfile += 'RUN curl -L https://grml.org/zsh/zshrc > /root/.zshrc\n'
-        rpki_image = "bashayer123/rpki_image_one_tal:latest"
-        if 'host_rpki' in real_nodename:
-            dockerfile = 'FROM {}\n'.format(rpki_image)
-        else:
-            dockerfile = 'FROM {}\n'.format(md5(image.getName().encode('utf-8')).hexdigest()) + dockerfile
-            self._used_images.add(image.getName())
+
+        dockerfile = 'FROM {}\n'.format(md5(image.getName().encode('utf-8')).hexdigest()) + dockerfile
+        self._used_images.add(image.getName())
 
         for cmd in node.getBuildCommands(): dockerfile += 'RUN {}\n'.format(cmd)
 
