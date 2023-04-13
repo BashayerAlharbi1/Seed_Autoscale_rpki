@@ -1051,14 +1051,14 @@ class Docker(Compiler):
 	#KO
 	#Removed apt updates and included in base build. added pass.
         if not node.hasAttribute('__soft_install_tiers') and len(soft) > 0:
-            dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(soft)))
-
+            # dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(soft)))
+            pass
             
         if node.hasAttribute('__soft_install_tiers'):
             softLists: List[List[str]] = node.getAttribute('__soft_install_tiers')
             for softList in softLists:
-                dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(softList)))
-
+                # dockerfile += 'RUN apt-get update && apt-get install -y --no-install-recommends {}\n'.format(' '.join(sorted(softList)))
+                pass
 
         dockerfile += 'RUN curl -L https://grml.org/zsh/zshrc > /root/.zshrc\n'
         rpki_image = "bashayer123/rpki_image_one_tal:latest"
@@ -1155,7 +1155,7 @@ class Docker(Compiler):
         #         startCommands = start_commands,
         #         specialCommands=special_commands
         # ))
-        dockerfile += 'RUN apt install traceroute -y\n'
+        # dockerfile += 'RUN apt install traceroute -y\n'
         dockerfile += self._addFile('/seedemu_sniffer', DockerCompilerFileTemplates['seedemu_sniffer'])
         dockerfile += self._addFile('/seedemu_worker', DockerCompilerFileTemplates['seedemu_worker'])
 
