@@ -24,7 +24,7 @@ for router in ${Routers[@]}; do
     string=${string#*"$delimiter"}
   done
   echo "############### ${AS_info[0]} _ ${AS_info[1]} ###############"
-  if docker exec $router /bin/bash -c "birdc show route all | grep -E '(^|\s)41.76.168.0/25($|\s)'"; then
+  if docker exec $router /bin/bash -c "birdc show route all | grep -E '(^|\s)8.8.8.0/25($|\s)'"; then
     echo "Hijacked route found in router: $router"
     let hijacked_route++
   else
