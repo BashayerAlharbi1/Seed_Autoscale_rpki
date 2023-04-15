@@ -2,7 +2,15 @@
 
 hijacked_route=0
 no_hijacked_route=0
-Routers=($(docker ps | grep "rnode" | awk '{ print $1 }' | grep -v $(docker ps --filter name=as11872r-rw -q)))
+#Routers=($(docker ps | grep "rnode" | awk '{ print $1 }' | grep -v $(docker ps --filter name=as11872r-rw -q)))
+
+containers=$(docker ps --format '{{.ID}} {{.Names}} {{.Image}}' | grep "rnode" | awk '{print $2}' | awk -F'-' '!a[$1]++ {print $0}' | grep -v "as11872r" | awk '{print $1}')
+
+Routers=()
+for container in ${containers[@]}; do
+  Routers+=($(sudo docker ps -qf "name=$container"))
+done
+
 RPKI=($(docker ps | grep "hnode" | grep "rpki" | awk '{ print $1 }'))
 
 for router in ${Routers[@]}; do
@@ -20,14 +28,15 @@ for router in ${Routers[@]}; do
     echo "Hijacked route found in router: $router"
     let hijacked_route++
   else
-    echo "Hijacked route not found in router: $router"
     let no_hijacked_route++
   fi
 done
-echo "#Routers that have the hijacked route in its RIB: $hijacked_route"
-echo "#Routers that do not have the hijacked route in its RIB: $no_hijacked_route"
-echo "#ASes deployed RPKI: $(echo ${#RPKI[*]})"
+
 echo "ASes with RPKI"
 for i in  ${RPKI[@]}; do
  echo "$(docker ps  --format '{{.Names}}' -f "ID=$i")"
 done
+echo "############### ############### ############### ############### ############### ############### "
+echo "#Routers that have the hijacked route in its RIB: $hijacked_route"
+echo "#Routers that do not have the hijacked route in its RIB: $no_hijacked_route"
+echo "#ASes deployed RPKI: $(echo ${#RPKI[*]})"
