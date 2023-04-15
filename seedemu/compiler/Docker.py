@@ -507,7 +507,7 @@ class DockerImage(object):
 
 DefaultImages: List[DockerImage] = []
 
-DefaultImages.append(DockerImage('bashayer123/rpki_image:v2', []))
+DefaultImages.append(DockerImage('bashayer123/rpki_image:v3', []))
 
 network_devices=[]
 
