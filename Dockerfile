@@ -20,7 +20,7 @@ RUN cargo install --version 0.11.3 -f routinator
 RUN routinator init --accept-arin-rpa
 RUN rm /root/.rpki-cache/tals/ripe.tal
 RUN rm /root/.rpki-cache/tals/lacnic.tal
-RUN rm /root/.rpki-cache/tals/arin.tal
+RUN rm /root/.rpki-cache/tals/apnic.tal
 RUN rm /root/.rpki-cache/tals/afrinic.tal
 RUN routinator -v vrps -o ROAs.csv
 RUN apt install traceroute -y
