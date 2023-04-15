@@ -17,6 +17,7 @@ DockerCompilerFileTemplates: Dict[str, str] = {}
 
 DockerCompilerFileTemplates['dockerfile'] = """\
 ARG DEBIAN_FRONTEND=noninteractive
+RUN echo 'exec zsh' > /root/.bashrc
 """
 
 # DockerCompilerFileTemplates['start_script'] = """\
@@ -506,7 +507,7 @@ class DockerImage(object):
 
 DefaultImages: List[DockerImage] = []
 
-DefaultImages.append(DockerImage('bashayer123/rpki_image:v1', []))
+DefaultImages.append(DockerImage('bashayer123/rpki_image:v2', []))
 
 network_devices=[]
 
