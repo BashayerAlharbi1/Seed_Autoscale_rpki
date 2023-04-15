@@ -1,11 +1,17 @@
 #!/bin/bash
 
-RPKI=($(docker ps | grep "hnode" | grep -v "rpki" | awk '{ print $1 }'))
+#Routers=($(docker ps | grep "hnode" | grep -v "rpki" | awk '{ print $1 }'))
 
+containers=$(docker ps --format '{{.ID}} {{.Names}} {{.Image}}' | grep "rnode" | awk '{print $2}' | awk -F'-' '!a[$1]++ {print $0}' | grep -v "as11872r" | awk '{print $1}')
+
+Routers=()
+for container in ${containers[@]}; do
+  Routers+=($(sudo docker ps -qf "name=$container"))
+done
 # create CSV file and add header row
 echo "ASN,AS IP,Ping Status,Traceroute Status" > dp_results
 
-for host in ${RPKI[@]}; do
+for host in ${Routers[@]}; do
 
   text=$(docker ps --format '{{.Names}}' -f "ID=$host")
   delimiter="-"
