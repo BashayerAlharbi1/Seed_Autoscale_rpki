@@ -73,16 +73,11 @@ ix39 = base.createInternetExchange(39)
 ix40 = base.createInternetExchange(40)
 
 
-
-
-
-
-
 ###############################################################################
 # 5 Transit ASes -> 100-105
 # 12 Stub ASes -> 106-117
 # Total num ASes of 17
-total_ASes =  149
+total_ASes =  120
 if FLAGS.d:       
   dep_percentage = FLAGS.d/100
   true_count = int(total_ASes * dep_percentage)
