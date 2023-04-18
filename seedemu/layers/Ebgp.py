@@ -67,7 +67,7 @@ protocol rpki {{
     roa6 {{ table r6;}};
     remote "{rpkiHostIp}" port 3323;
     retry keep 90;
-    refresh keep 900;
+    refresh keep 30000;
     expire keep 172800;
 }}
 filter peer_in_v4 {{
@@ -495,7 +495,7 @@ class Ebgp(Layer, Graphable):
                         b_ixnode = node
                         b_ixif = iface
                         break
-            
+
             assert b_ixnode != None, 'cannot resolve peering: as{} not in ix{}'.format(b, ix)
 
             self._log("adding IX peering: {} as {} <-({})-> {} as {}".format(a_ixif.getAddress(), a, rel, b_ixif.getAddress(), b))

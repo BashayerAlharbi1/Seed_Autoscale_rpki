@@ -1142,7 +1142,7 @@ class Docker(Compiler):
 
             dockerfile += self._addFile('/start.sh', DockerCompilerFileTemplates['start_script'].format(
                 startCommands=start_commands,
-                rtrServer='routinator server --rtr {ip}:3323 --refresh=300 --detach &\n'.format(
+                rtrServer='routinator server --rtr {ip}:3323 --refresh=30000 --detach &\n'.format(
                     ip=node.getInterfaces()[0].getAddress())))
         else:
             dockerfile += self._addFile('/start.sh', DockerCompilerFileTemplates['start_script'].format(
