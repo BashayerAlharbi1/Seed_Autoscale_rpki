@@ -66,7 +66,7 @@ protocol rpki {{
     roa4 {{ table r4;}};
     roa6 {{ table r6;}};
     remote "{rpkiHostIp}" port 3323;
-    retry keep 90;
+    retry keep 10;
     refresh keep 900;
     expire keep 172800;
 }}
